@@ -1,0 +1,81 @@
+{
+	"name": "spark_df_delta_table_write",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "sprakDemoPool",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "41bea4c6-2796-471b-9261-6071bacad926"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/25bc34ae-c63a-42a3-bf7b-712ec3819a65/resourceGroups/Dev-Rg-Ys/providers/Microsoft.Synapse/workspaces/synapseysdevworkspace/bigDataPools/sprakDemoPool",
+				"name": "sprakDemoPool",
+				"type": "Spark",
+				"endpoint": "https://synapseysdevworkspace.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sprakDemoPool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.4",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "python"
+					}
+				},
+				"source": [
+					"%%pyspark\r\n",
+					"from pyspark.sql.functions import col, sum\r\n",
+					"df = spark.read.load('abfss://dev@devrgadls.dfs.core.windows.net/Raw_Data/sales_data.csv', format='csv', header=True, inferSchema=True)\r\n",
+					"\r\n",
+					"# Define the schema (database)\r\n",
+					"spark.sql(\"CREATE DATABASE IF NOT EXISTS Salesmart\")\r\n",
+					"\r\n",
+					"# Perform some aggregation (e.g., total sales by year)\r\n",
+					"aggregated_df = df.groupBy(\"YEAR_ID\").agg(\r\n",
+					"    sum(col(\"SALES\")).alias(\"total_sales\")\r\n",
+					")\r\n",
+					"\r\n",
+					"# Write the Delta table without specifying a path\r\n",
+					"aggregated_df.write.format(\"delta\").mode(\"overwrite\").saveAsTable(\"salesmart.SalesAggregation\")\r\n",
+					"\r\n",
+					"print(\"Write in Delta Completed !!!!!\")"
+				],
+				"execution_count": 1
+			}
+		]
+	}
+}

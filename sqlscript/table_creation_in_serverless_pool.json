@@ -1,0 +1,17 @@
+{
+	"name": "table_creation_in_serverless_pool",
+	"properties": {
+		"content": {
+			"query": "-- CREATE DATABASE SalesDB;\n\n-- USE SalesDB;\n-- CREATE SCHEMA Sales;\n\nCREATE EXTERNAL DATA SOURCE RawDataExternalLoc\nWITH (\n    LOCATION = 'https://devrgadls.blob.core.windows.net/dev'\n);\n\nCREATE EXTERNAL FILE FORMAT CsvFormat\nWITH (\n    FORMAT_TYPE = DELIMITEDTEXT,\n    FORMAT_OPTIONS (\n        FIELD_TERMINATOR = ',',\n        STRING_DELIMITER = '\"',\n        FIRST_ROW = 2 -- Skip the header row\n    )\n);\n\nCREATE EXTERNAL TABLE Sales.Orders\n(\n    ORDERNUMBER INT,\n    QUANTITYORDERED INT,\n    PRICEEACH FLOAT,\n    ORDERLINENUMBER INT,\n    SALES FLOAT,\n    ORDERDATE VARCHAR(50),\n    STATUS VARCHAR(50),\n    QTR_ID INT,\n    MONTH_ID INT,\n    YEAR_ID INT\n)\nWITH (\n    LOCATION = 'Raw_Data/sales_data.csv', -- Path within your container\n    DATA_SOURCE = RawDataExternalLoc,\n    FILE_FORMAT = CsvFormat\n);\n\nDROP EXTERNAL TABLE Sales.Orders;\n\nSELECT COUNT(*) FROM Sales.Orders;\n\nSELECT TOP 5 * FROM Sales.Orders;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "SalesDB",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

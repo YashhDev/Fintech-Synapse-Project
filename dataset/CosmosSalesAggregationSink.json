@@ -1,0 +1,16 @@
+{
+	"name": "CosmosSalesAggregationSink",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "CosmosDbNoSql_Ls",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "CosmosDbSqlApiCollection",
+		"schema": {},
+		"typeProperties": {
+			"collectionName": "SalesAggregates"
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

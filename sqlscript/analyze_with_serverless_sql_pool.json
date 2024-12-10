@@ -1,0 +1,17 @@
+{
+	"name": "analyze_with_serverless_sql_pool",
+	"properties": {
+		"content": {
+			"query": "-- Running it on serverless SQL pool\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'https://devrgadls.dfs.core.windows.net/dev/order_tracking_2023_01_01.csv',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0',\n        HEADER_ROW = TRUE\n    ) AS [result]\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

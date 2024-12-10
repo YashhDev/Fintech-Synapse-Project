@@ -1,0 +1,13 @@
+{
+	"name": "SQLSource",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SQLDatabaseLS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": []
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

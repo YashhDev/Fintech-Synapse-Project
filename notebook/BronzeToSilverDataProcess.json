@@ -1,0 +1,121 @@
+{
+	"name": "BronzeToSilverDataProcess",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "sprakDemoPool",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "6ce55196-f443-4bda-bac6-504c1ae2a9a0"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/25bc34ae-c63a-42a3-bf7b-712ec3819a65/resourceGroups/Dev-Rg-Ys/providers/Microsoft.Synapse/workspaces/synapseysdevworkspace/bigDataPools/sprakDemoPool",
+				"name": "sprakDemoPool",
+				"type": "Spark",
+				"endpoint": "https://synapseysdevworkspace.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sprakDemoPool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.4",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"from pyspark.sql.functions import *\r\n",
+					"\r\n",
+					"# Define paths\r\n",
+					"base_path = \"abfss://fintech@airbnbdatadev.dfs.core.windows.net/bronze/fintech/\"\r\n",
+					"output_base_path = \"abfss://fintech@airbnbdatadev.dfs.core.windows.net/silver/fintech/\"\r\n",
+					"\r\n",
+					"spark.conf.set(\"spark.databricks.delta.schema.autoMerge.enabled\", \"true\")\r\n",
+					"\r\n",
+					"# Transformation for Accounts dataset\r\n",
+					"def transform_accounts():\r\n",
+					"    df = spark.read.parquet(f\"{base_path}Accounts/Accounts.parquet\")\r\n",
+					"    # Example transformation: Calculate account age in years\r\n",
+					"    df_transformed = df.withColumn(\"AccountAgeYears\", \r\n",
+					"                                   round(datediff(current_date(), col(\"OpenDate\")) / 365.25, 2))\r\n",
+					"    df_transformed.write.format(\"delta\").mode(\"overwrite\").save(f\"{output_base_path}Accounts/\")\r\n",
+					"\r\n",
+					"# Transformation for Customers dataset\r\n",
+					"def transform_customers():\r\n",
+					"    df = spark.read.parquet(f\"{base_path}Customers/Customers.parquet\")\r\n",
+					"    # Example transformation: Create a full name column and mask the email address\r\n",
+					"    df_transformed = df.withColumn(\"FullName\", concat_ws(\" \", col(\"FirstName\"), col(\"LastName\"))) \\\r\n",
+					"                       .withColumn(\"MaskedEmail\", \r\n",
+					"                                   concat(lit(\"***@\"), substring_index(col(\"Email\"), \"@\", -1)))\r\n",
+					"    df_transformed.write.format(\"delta\").mode(\"overwrite\").save(f\"{output_base_path}Customers/\")\r\n",
+					"\r\n",
+					"# Transformation for Loans dataset with explicit casting\r\n",
+					"def transform_loans():\r\n",
+					"    df = spark.read.parquet(f\"{base_path}Loans/Loans.parquet\")\r\n",
+					"    # Example transformation: Calculate total interest with explicit casting to match the Delta table\r\n",
+					"    df_transformed = df.withColumn(\"TotalInterest\", \r\n",
+					"                                   (col(\"LoanAmount\") * col(\"InterestRate\") / 100).cast(\"decimal(28,8)\")) \\\r\n",
+					"                       .withColumn(\"LoanDurationYears\", \r\n",
+					"                                   round(datediff(col(\"LoanEndDate\"), col(\"LoanStartDate\")) / 365.25, 2))\r\n",
+					"    df_transformed.write.format(\"delta\").mode(\"overwrite\").save(f\"{output_base_path}Loans/\")\r\n",
+					"\r\n",
+					"# Transformation for Payments dataset\r\n",
+					"def transform_payments():\r\n",
+					"    df = spark.read.parquet(f\"{base_path}Payments/Payments.parquet\")\r\n",
+					"    # Example transformation: Calculate days since last payment\r\n",
+					"    df_transformed = df.withColumn(\"DaysSinceLastPayment\", \r\n",
+					"                                   datediff(current_date(), col(\"PaymentDate\")))\r\n",
+					"    df_transformed.write.format(\"delta\").mode(\"overwrite\").save(f\"{output_base_path}Payments/\")\r\n",
+					"\r\n",
+					"# Transformation for Transactions dataset\r\n",
+					"def transform_transactions():\r\n",
+					"    df = spark.read.parquet(f\"{base_path}Transactions/Transactions.parquet\")\r\n",
+					"    # Example transformation: Categorize transaction types\r\n",
+					"    df_transformed = df.withColumn(\"TransactionCategory\", \r\n",
+					"                                   when(col(\"TransactionType\") == \"Deposit\", \"Income\")\r\n",
+					"                                   .when(col(\"TransactionType\") == \"Withdrawal\", \"Expense\")\r\n",
+					"                                   .otherwise(\"Other\"))\r\n",
+					"    df_transformed.write.format(\"delta\").mode(\"overwrite\").save(f\"{output_base_path}Transactions/\")\r\n",
+					"\r\n",
+					"# Process each table\r\n",
+					"transform_accounts()\r\n",
+					"transform_customers()\r\n",
+					"transform_loans()\r\n",
+					"transform_payments()\r\n",
+					"transform_transactions()\r\n",
+					"\r\n",
+					"print(\"Bronze To Silver Completed !!\")\r\n",
+					""
+				]
+			}
+		]
+	}
+}

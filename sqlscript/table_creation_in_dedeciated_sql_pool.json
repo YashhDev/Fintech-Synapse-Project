@@ -1,0 +1,17 @@
+{
+	"name": "table_creation_in_dedeciated_sql_pool",
+	"properties": {
+		"content": {
+			"query": "CREATE SCHEMA Sales;\n\nCREATE TABLE Sales.Orders\n(\n    ORDERNUMBER INT,\n    QUANTITYORDERED INT,\n    PRICEEACH FLOAT,\n    ORDERLINENUMBER INT,\n    SALES FLOAT,\n    ORDERDATE VARCHAR(50),\n    STATUS VARCHAR(50),\n    QTR_ID INT,\n    MONTH_ID INT,\n    YEAR_ID INT\n);\n\nDrop table Sales.Orders;\n\nCOPY INTO Sales.Orders\nFROM 'https://devrgadls.blob.core.windows.net/dev/Raw_Data'\nWITH (\n    FILE_TYPE = 'CSV',\n    FIELDTERMINATOR = ',',\n    FIRSTROW = 2 -- Skip the header row\n);\n\nSELECT COUNT(*) FROM Sales.Orders;\n\nSELECT TOP 5 * FROM Sales.Orders;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "demoSqlPool",
+				"poolName": "demoSqlPool"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,67 @@
+{
+	"name": "SalesDatTransform",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "RawSalesData",
+						"type": "DatasetReference"
+					},
+					"name": "RawSalesData"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "CosmosSalesAggregationSink",
+						"type": "DatasetReference"
+					},
+					"name": "sinkCosmos",
+					"description": "Export Data to CosmosSalesAggregateSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "filterShipped",
+					"description": "Aggregating Data by \"YEAR_ID,\nMONTH_ID\" producing columns 'TotalSale'"
+				},
+				{
+					"name": "aggregateSales",
+					"description": "Filtering rows using expression on \ncolumns 'STATUS'"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          ORDERNUMBER as string,",
+				"          QUANTITYORDERED as string,",
+				"          PRICEEACH as string,",
+				"          ORDERLINENUMBER as string,",
+				"          SALES as integer,",
+				"          ORDERDATE as string,",
+				"          STATUS as string,",
+				"          QTR_ID as string,",
+				"          MONTH_ID as string,",
+				"          YEAR_ID as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> RawSalesData",
+				"RawSalesData filter(STATUS=='Shipped') ~> filterShipped",
+				"filterShipped aggregate(groupBy(YEAR_ID,",
+				"          MONTH_ID),",
+				"     TotalSale = sum(SALES)) ~> aggregateSales",
+				"aggregateSales sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'document',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkCosmos"
+			]
+		}
+	}
+}
