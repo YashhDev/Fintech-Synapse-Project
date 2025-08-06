@@ -1,6 +1,6 @@
 # 📊 Fintech CDC Data Migration Pipeline
 
-![Fintech CDC Pipeline Overview](docs/architecture.png)
+![Fintech CDC Pipeline Overview](architecture FinTech.png)
 
 
 ---
