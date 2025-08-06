@@ -1,6 +1,6 @@
 # 📊 Fintech CDC Data Migration Pipeline
 
-![Fintech CDC Pipeline Overview](architecture FinTech.png)
+![image alt](https://github.com/YashhDev/Fintech-Synapse-Project/blob/96dc310ebfbb105bca2be54178915dc991d2f063/architecture%20FinTech.png)
 
 
 ---
