@@ -69,10 +69,6 @@ The **Fintech CDC Data Migration Pipeline**:
 
 ---
 
-## 📂 Folder Structure
-
-
----
 
 ## ⚡ Setup Instructions
 1. **Clone the repository**
